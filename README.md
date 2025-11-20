@@ -2,6 +2,10 @@
 
 A headcount planning model tool built with Next.js, React, TypeScript, and Tailwind CSS.
 
+## Quick Start
+
+**New to this project?** See [SETUP.md](./SETUP.md) for a simple guide to get started.
+
 ## Tech Stack
 
 - **Framework**: Next.js 14
