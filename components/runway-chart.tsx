@@ -42,22 +42,24 @@ export function RunwayChart({ monthlyProjections }: RunwayChartProps) {
     return null;
   }, [chartData]);
 
-  // Create ticks for x-axis (every 6th month: 0, 6, 12, 18, 23)
+  // Create ticks for x-axis (every 3rd month, plus last month and zero month)
   const xAxisTicks = React.useMemo(() => {
-    const ticks: number[] = [];
-    for (let i = 0; i < chartData.length; i += 6) {
-      ticks.push(i);
+    const tickIndices: number[] = [];
+    // Show every 3rd month (0, 3, 6, 9, 12, 15, 18, 21)
+    for (let i = 0; i < chartData.length; i += 3) {
+      tickIndices.push(i);
     }
     // Always include the last month
-    if (ticks[ticks.length - 1] !== chartData.length - 1) {
-      ticks.push(chartData.length - 1);
+    if (tickIndices[tickIndices.length - 1] !== chartData.length - 1) {
+      tickIndices.push(chartData.length - 1);
     }
     // Include the zero month if it exists and isn't already in ticks
-    if (zeroMonthIndex !== null && !ticks.includes(zeroMonthIndex)) {
-      ticks.push(zeroMonthIndex);
-      ticks.sort((a, b) => a - b);
+    if (zeroMonthIndex !== null && !tickIndices.includes(zeroMonthIndex)) {
+      tickIndices.push(zeroMonthIndex);
+      tickIndices.sort((a, b) => a - b);
     }
-    return ticks;
+    // Return the actual month labels for these indices
+    return tickIndices.map(idx => chartData[idx]?.month).filter(Boolean);
   }, [chartData, zeroMonthIndex]);
 
   // Debug: Log data to console
@@ -115,18 +117,9 @@ export function RunwayChart({ monthlyProjections }: RunwayChartProps) {
           tickLine={false}
           axisLine={false}
           tickMargin={8}
+          ticks={xAxisTicks}
           tick={(props: any) => {
             const { x, y, payload } = props;
-            const dataIndex = chartData.findIndex(d => d.month === payload.value);
-            const isEvery6th = dataIndex % 6 === 0;
-            const isLast = dataIndex === chartData.length - 1;
-            const isZeroMonth = zeroMonthIndex !== null && dataIndex === zeroMonthIndex;
-            
-            // Only show tick if it's every 6th month, last month, or zero month
-            if (!isEvery6th && !isLast && !isZeroMonth) {
-              return null;
-            }
-            
             // Show full month label with year (e.g., "Jan 2024")
             const label = payload.value;
             

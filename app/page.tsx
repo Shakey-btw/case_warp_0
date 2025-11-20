@@ -25,17 +25,12 @@ export default function Home() {
     monthlyGrowthRate: 5,
   };
 
-  // Get actual value for calculations (use default if field is empty/showing placeholder)
-  const getActualValue = (value: number, defaultValue: number): number => {
-    return value === 0 ? defaultValue : value;
-  };
-
-  // Initialize with default values
+  // Initialize with empty values (placeholders will show defaults)
   const [inputs, setInputs] = useState<HeadcountPlanningInputs>({
-    cashInBank: defaultValues.cashInBank,
-    currentRevenue: defaultValues.currentRevenue,
-    monthlyGrowthRate: defaultValues.monthlyGrowthRate,
-    fixedMonthlySpending: defaultValues.fixedMonthlySpending,
+    cashInBank: 0,
+    currentRevenue: 0,
+    monthlyGrowthRate: 0,
+    fixedMonthlySpending: 0,
     teamComposition: {
       engineer: 12,
       designer: 2,
@@ -57,15 +52,8 @@ export default function Home() {
     }
   }, []);
 
-  // Calculate results whenever inputs change (use actual values, defaulting to defaults if empty)
-  const calculationInputs = {
-    ...inputs,
-    cashInBank: getActualValue(inputs.cashInBank, defaultValues.cashInBank),
-    fixedMonthlySpending: getActualValue(inputs.fixedMonthlySpending, defaultValues.fixedMonthlySpending),
-    currentRevenue: getActualValue(inputs.currentRevenue, defaultValues.currentRevenue),
-    monthlyGrowthRate: getActualValue(inputs.monthlyGrowthRate, defaultValues.monthlyGrowthRate),
-  };
-  const results = calculateHeadcountPlanning(calculationInputs);
+  // Calculate results whenever inputs change (use actual values, 0 if empty)
+  const results = calculateHeadcountPlanning(inputs);
 
   // Debug: Log calculation results
   useEffect(() => {
@@ -116,101 +104,29 @@ export default function Home() {
   const handleCashChange = (value: number | undefined) => {
     setInputs((prev) => ({
       ...prev,
-      cashInBank: value ?? defaultValues.cashInBank,
+      cashInBank: value ?? 0,
     }));
-  };
-
-  const handleCashFocus = () => {
-    if (inputs.cashInBank === defaultValues.cashInBank) {
-      setInputs((prev) => ({
-        ...prev,
-        cashInBank: 0,
-      }));
-    }
-  };
-
-  const handleCashBlur = () => {
-    if (inputs.cashInBank === 0) {
-      setInputs((prev) => ({
-        ...prev,
-        cashInBank: defaultValues.cashInBank,
-      }));
-    }
   };
 
   const handleFixedCostsChange = (value: number | undefined) => {
     setInputs((prev) => ({
       ...prev,
-      fixedMonthlySpending: value ?? defaultValues.fixedMonthlySpending,
+      fixedMonthlySpending: value ?? 0,
     }));
-  };
-
-  const handleFixedCostsFocus = () => {
-    if (inputs.fixedMonthlySpending === defaultValues.fixedMonthlySpending) {
-      setInputs((prev) => ({
-        ...prev,
-        fixedMonthlySpending: 0,
-      }));
-    }
-  };
-
-  const handleFixedCostsBlur = () => {
-    if (inputs.fixedMonthlySpending === 0) {
-      setInputs((prev) => ({
-        ...prev,
-        fixedMonthlySpending: defaultValues.fixedMonthlySpending,
-      }));
-    }
   };
 
   const handleCurrentRevenueChange = (value: number | undefined) => {
     setInputs((prev) => ({
       ...prev,
-      currentRevenue: value ?? defaultValues.currentRevenue,
+      currentRevenue: value ?? 0,
     }));
-  };
-
-  const handleCurrentRevenueFocus = () => {
-    if (inputs.currentRevenue === defaultValues.currentRevenue) {
-      setInputs((prev) => ({
-        ...prev,
-        currentRevenue: 0,
-      }));
-    }
-  };
-
-  const handleCurrentRevenueBlur = () => {
-    if (inputs.currentRevenue === 0) {
-      setInputs((prev) => ({
-        ...prev,
-        currentRevenue: defaultValues.currentRevenue,
-      }));
-    }
   };
 
   const handleMonthlyGrowthChange = (value: number | undefined) => {
     setInputs((prev) => ({
       ...prev,
-      monthlyGrowthRate: value ?? defaultValues.monthlyGrowthRate,
+      monthlyGrowthRate: value ?? 0,
     }));
-  };
-
-  const handleMonthlyGrowthFocus = () => {
-    if (inputs.monthlyGrowthRate === defaultValues.monthlyGrowthRate) {
-      setInputs((prev) => ({
-        ...prev,
-        monthlyGrowthRate: 0,
-      }));
-    }
-  };
-
-  const handleMonthlyGrowthBlur = () => {
-    if (inputs.monthlyGrowthRate === 0) {
-      setInputs((prev) => ({
-        ...prev,
-        monthlyGrowthRate: defaultValues.monthlyGrowthRate,
-      }));
-    }
   };
 
   const handleTeamCompositionChange = (type: EmployeeType, count: number) => {
@@ -264,15 +180,15 @@ export default function Home() {
     setIsSubmitting(false);
   };
 
-  // Format money value for display in input (show empty if equals default, so placeholder shows)
-  const formatMoneyForInput = (value: number, defaultValue: number): string => {
-    if (value === 0 || value === defaultValue) return "";
+  // Format money value for display in input (show empty if 0, so placeholder shows)
+  const formatMoneyForInput = (value: number): string => {
+    if (value === 0) return "";
     return value.toLocaleString('en-US', { maximumFractionDigits: 0 }).replace(/,/g, '.');
   };
 
-  // Format percentage value for display in input (show empty if equals default, so placeholder shows)
-  const formatPercentageForInput = (value: number, defaultValue: number): string => {
-    if (value === 0 || value === defaultValue) return "";
+  // Format percentage value for display in input (show empty if 0, so placeholder shows)
+  const formatPercentageForInput = (value: number): string => {
+    if (value === 0) return "";
     return value.toString();
   };
 
@@ -281,10 +197,11 @@ export default function Home() {
     return defaultValue.toLocaleString('en-US', { maximumFractionDigits: 0 }).replace(/,/g, '.');
   };
 
-  // Parse money input
+  // Parse money input (dots are thousands separators, not decimal points)
   const parseMoneyInput = (value: string): number => {
-    const cleaned = value.replace(/[^0-9.]/g, '');
-    const parsed = parseFloat(cleaned);
+    // Remove all non-digit characters (dots are thousands separators, not decimals)
+    const cleaned = value.replace(/[^0-9]/g, '');
+    const parsed = parseInt(cleaned, 10);
     return isNaN(parsed) ? 0 : parsed;
   };
 
@@ -359,10 +276,8 @@ export default function Home() {
                   <input
                     id="cashInBank"
                     type="text"
-                    value={formatMoneyForInput(inputs.cashInBank, defaultValues.cashInBank)}
+                    value={formatMoneyForInput(inputs.cashInBank)}
                     onChange={(e) => handleCashChange(parseMoneyInput(e.target.value))}
-                    onFocus={handleCashFocus}
-                    onBlur={handleCashBlur}
                     placeholder={getMoneyPlaceholder(defaultValues.cashInBank)}
                     className="flex h-10 w-full rounded-[6px] border border-input bg-background pl-7 pr-3 py-2 text-sm placeholder:text-muted-foreground focus:border-stroke-dark focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
                   />
@@ -379,10 +294,8 @@ export default function Home() {
                   <input
                     id="fixedCosts"
                     type="text"
-                    value={formatMoneyForInput(inputs.fixedMonthlySpending, defaultValues.fixedMonthlySpending)}
+                    value={formatMoneyForInput(inputs.fixedMonthlySpending)}
                     onChange={(e) => handleFixedCostsChange(parseMoneyInput(e.target.value))}
-                    onFocus={handleFixedCostsFocus}
-                    onBlur={handleFixedCostsBlur}
                     placeholder={getMoneyPlaceholder(defaultValues.fixedMonthlySpending)}
                     className="flex h-10 w-full rounded-[6px] border border-input bg-background pl-7 pr-3 py-2 text-sm placeholder:text-muted-foreground focus:border-stroke-dark focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
                   />
@@ -400,10 +313,8 @@ export default function Home() {
                     <input
                       id="revenue"
                       type="text"
-                      value={formatMoneyForInput(inputs.currentRevenue, defaultValues.currentRevenue)}
+                      value={formatMoneyForInput(inputs.currentRevenue)}
                       onChange={(e) => handleCurrentRevenueChange(parseMoneyInput(e.target.value))}
-                      onFocus={handleCurrentRevenueFocus}
-                      onBlur={handleCurrentRevenueBlur}
                       placeholder={getMoneyPlaceholder(defaultValues.currentRevenue)}
                       className="flex h-10 w-full rounded-[6px] border border-input bg-background pl-7 pr-3 py-2 text-sm placeholder:text-muted-foreground focus:border-stroke-dark focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
                     />
@@ -418,10 +329,8 @@ export default function Home() {
                     <input
                       id="growth"
                       type="text"
-                      value={formatPercentageForInput(inputs.monthlyGrowthRate, defaultValues.monthlyGrowthRate)}
+                      value={formatPercentageForInput(inputs.monthlyGrowthRate)}
                       onChange={(e) => handleMonthlyGrowthChange(parsePercentageInput(e.target.value))}
-                      onFocus={handleMonthlyGrowthFocus}
-                      onBlur={handleMonthlyGrowthBlur}
                       placeholder={defaultValues.monthlyGrowthRate.toString()}
                       className="flex h-10 w-full rounded-[6px] border border-input bg-background pl-3 pr-7 py-2 text-sm placeholder:text-muted-foreground focus:border-stroke-dark focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
                     />
